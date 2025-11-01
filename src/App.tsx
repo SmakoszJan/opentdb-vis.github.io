@@ -44,7 +44,7 @@ function App() {
                 return {
                     id: category.id,
                     name: category.name,
-                    color: `hsl(${720 * i++ / max}, 100%, ${40 + 10 * (i % 3)}%)`
+                    color: `hsl(${720 * i++ / max - 5 * i / 360}, 100%, ${40 + 10 * (i % 3)}%)` // Offset repetitions
                 };
             }));
         });
@@ -53,7 +53,7 @@ function App() {
     // Pull questions. Retry if the endpoint acts up.
     let retry = 0;
     useEffect(() => {
-        fetch("https://opentdb.com/api.php?amount=50").then(res => res.json()).then((res) => {
+        fetch("https://opentdb.com/api.php?amount=100").then(res => res.json()).then((res) => {
             if (res["response_code"] == 0) {
                 let newData: { [difficulty: string]: { [category: string]: number } } = {};
                 res["results"].forEach((res: { difficulty: string, category: string }) => {
