@@ -2,10 +2,6 @@ import {useEffect, useState} from 'react'
 import './App.css'
 import {Bar, BarChart, Tooltip, XAxis, YAxis} from "recharts";
 
-// class Category {
-//     id: number;
-//     name: string;
-// }
 
 type Category = {
     id: number,
@@ -18,6 +14,7 @@ type DataPoint = {
     difficulty: string
 }
 
+// Utility function for sorting data points.
 function rank(v: string) {
     switch (v) {
         case "easy":
@@ -37,6 +34,7 @@ function App() {
     const [filter, setFilter] = useState('all');
     const [maxCount, setMaxCount] = useState(0);
 
+    // Pull categories
     useEffect(() => {
         fetch("https://opentdb.com/api_category.php").then(res => res.json()).then(res => {
             let i = 0;
@@ -52,6 +50,7 @@ function App() {
         });
     }, []);
 
+    // Pull questions. Retry if the endpoint acts up.
     let retry = 0;
     useEffect(() => {
         fetch("https://opentdb.com/api.php?amount=50").then(res => res.json()).then((res) => {
@@ -59,10 +58,16 @@ function App() {
                 let newData: { [difficulty: string]: { [category: string]: number } } = {};
                 res["results"].forEach((res: { difficulty: string, category: string }) => {
                     if (!(res.difficulty in newData)) newData[res.difficulty] = {};
+                    // Category naming is inconsistent between questions and categories.
+                    // Thus the replacement.
                     let category = res.category.replace('&amp;', '&');
                     if (!(category in newData[res.difficulty])) newData[res.difficulty][category] = 0;
                     newData[res.difficulty][category]++;
                 });
+
+                // Map the input of difficulty -> category -> count
+                // to difficulty -> { category, count }
+                // Also find the domain for data
                 let points: DataPoint[] = [];
                 let maxCount = 0;
                 for (let [difficulty, map] of Object.entries(newData)) {
@@ -72,6 +77,7 @@ function App() {
 
                     points.push({difficulty, data: map});
                 }
+                // Unsorted points would create an arbitrary number of categories, despite being named the same
                 points.sort((a, b) => rank(a.difficulty) - rank(b.difficulty));
                 setData(points);
                 setMaxCount(maxCount);
@@ -83,6 +89,7 @@ function App() {
         });
     }, [retry]);
 
+    // Apply the category filter.
     let trueData = [];
     if (filter === "all") {
         trueData = data;
